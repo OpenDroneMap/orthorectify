@@ -1,0 +1,20 @@
+image: ubuntu:jammy
+
+build:
+  stage: build
+  before_script:
+    - apt-get update && apt-get install -y --fix-missing --no-install-recommends build-essential cmake libomp-dev libgdal-dev
+  script:
+    - ls -la
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j$(nproc)
+  artifacts:
+    paths:
+      - build
+
+cache:
+    paths:
+        - build/downloads
+        - build/**/*.o

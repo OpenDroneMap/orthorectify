@@ -1,0 +1,15 @@
+file(GLOB SOURCES "*.cpp")
+
+set(SRC_LIST
+   ${SRC_LIST}
+   ${SOURCES}
+   PARENT_SCOPE
+)
+
+file (GLOB HEADERS "*.hpp")
+
+set(HEADERS_LIST
+   ${HEADERS_LIST}
+   ${HEADERS}
+   PARENT_SCOPE
+)
