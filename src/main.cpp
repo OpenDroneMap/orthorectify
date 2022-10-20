@@ -82,15 +82,19 @@ int main(int argc, char** argv)
 	int dem_offset_y = 0;
 
 	// Get CRS
-	const char* demWkt = dem->GetProjectionRef();
+	const char* tmp_wkt = dem->GetProjectionRef();
 
-	if (demWkt != nullptr)
+	std::string wkt = "";
+
+	if (tmp_wkt != nullptr)
 	{
-		pretty_print_crs(demWkt);
+		pretty_print_crs(tmp_wkt);
 		get_dem_offsets(params.dataset_path, dem_offset_x, dem_offset_y);
 
 		INF << "DEM offset (" << dem_offset_x << ", " << dem_offset_y << ")";
-	}
+
+		wkt = tmp_wkt;
+	}	
 
 	const int h = dem->GetRasterYSize();
 	const int w = dem->GetRasterXSize();
@@ -175,11 +179,15 @@ int main(int argc, char** argv)
 
 		INF << "Processing shot " << shot.id;
 		cnt++;
+		
+		const auto shot_ext = fs::path(shot.id).extension();
+		// Add .tif if shot.id does not end with it
+		const auto shot_file_name = shot_ext == ".tif" ? shot.id : shot.id + ".tif";
 
-		const auto image_path = (params.dataset_path / "opensfm" / "undistorted" / "images" / (shot.id + ".tif")).generic_string();
+		const auto image_path = (params.dataset_path / "opensfm" / "undistorted" / "images" / shot_file_name).generic_string();
 
 		DBG << "Image file path: " << image_path;
-		const auto out_path = (params.outdir / (shot.id + ".tif")).generic_string();
+		const auto out_path = (params.outdir / shot_file_name).generic_string();
 
 		switch (dem_band_type) {
 		case GDT_Float32:
@@ -198,7 +206,7 @@ int main(int argc, char** argv)
 					(float*)dem_data,
 					params.interpolation,
 					params.with_alpha,
-					demWkt
+					wkt
 			}
 			);
 			break;
@@ -218,7 +226,7 @@ int main(int argc, char** argv)
 					(uint8_t*)dem_data,
 					params.interpolation,
 					params.with_alpha,
-					demWkt
+					wkt
 			}
 			);
 			break;
@@ -238,7 +246,7 @@ int main(int argc, char** argv)
 					(uint16_t*)dem_data,
 					params.interpolation,
 					params.with_alpha,
-					demWkt
+					tmp_wkt
 			}
 			);
 			break;

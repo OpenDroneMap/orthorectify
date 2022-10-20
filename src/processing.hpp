@@ -39,7 +39,7 @@ namespace orthorectify {
 
 		const InterpolationType interpolation;
 		const bool with_alpha;
-		const char* wkt;
+		const std::string& wkt;
 
 	};
 
@@ -368,8 +368,9 @@ namespace orthorectify {
 
 			ds->SetMetadataItem("SOFTWARE", "Orthorectify");
 
-			// Set projection
-			ds->SetProjection(params.wkt);
+			// Set projection (if any)
+			if (!params.wkt.empty())
+				ds->SetProjection(params.wkt.c_str());
 
 			});
 
