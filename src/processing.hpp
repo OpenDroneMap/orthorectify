@@ -158,8 +158,8 @@ namespace orthorectify {
 
 		RawImage imgout(dem_bbox_w, dem_bbox_h, image.has_alpha(), "GTiff");
 
-		std::vector<uint8_t> values(bands);
-		memset(values.data(), 0, values.size());
+		auto* values = new uint8_t[bands];
+		memset(values, 0, bands);
 
 		auto minx = dem_bbox_w;
 		auto miny = dem_bbox_h;
@@ -244,27 +244,27 @@ namespace orthorectify {
 						const auto xi = img_w - 1 - x;
 						const auto yi = img_h - 1 - y;
 
-						image.bilinear_interpolate(xi, yi, values.data());
+						image.bilinear_interpolate(xi, yi, values);
 					}
 					else
 					{
 						const auto xi = img_w - 1 - static_cast<int>(std::round(x));
 						const auto yi = img_h - 1 - static_cast<int>(std::round(y));
 
-						image.get_pixel(xi, yi, values.data());
+						image.get_pixel(xi, yi, values);
 					}
-
+					
 					// We don't consider all zero values (pure black)
 					// to be valid sample values. This will sometimes miss
 					// valid sample values.
-					if (std::any_of(values.begin(), values.end(), [](const auto& v) { return v != 0; }))
+					if (values[0] != 0 || values[1] != 0 || values[2] != 0 || (bands == 4 && values[3] != 0))
 					{
 						minx = MIN(minx, im_i);
 						miny = MIN(miny, im_j);
 						maxx = MAX(maxx, im_i);
 						maxy = MAX(maxy, im_j);
 
-						imgout.set_pixel(im_i, im_j, values.data());
+						imgout.set_pixel(im_i, im_j, values);
 						//DBG << "Boundaries updated: (" << minx << ", " << miny << ") -> (" << maxx << ", " << maxy << ")" ;
 					}
 
@@ -295,8 +295,9 @@ namespace orthorectify {
 
 		RawImage imgdst(out_w, out_h, params.with_alpha, "GTiff");
 
-		values.resize(target_bands);
-		memset(values.data(), 0, target_bands );
+		delete[] values;
+		values = new uint8_t[target_bands];
+		memset(values, 0, target_bands);
 
 		if (params.with_alpha) {
 
@@ -308,7 +309,7 @@ namespace orthorectify {
 					const auto im_i = minx + i;
 					const auto im_j = miny + j;
 
-					imgout.get_pixel(im_i, im_j, values.data());
+					imgout.get_pixel(im_i, im_j, values);
 
 					bool nan = true;
 
@@ -322,7 +323,7 @@ namespace orthorectify {
 					}
 					values[target_bands - 1] = nan ? 0 : 255;
 
-					imgdst.set_pixel(i, j, values.data());
+					imgdst.set_pixel(i, j, values);
 
 				}
 			}
@@ -338,12 +339,13 @@ namespace orthorectify {
 					const auto im_i = minx + i;
 					const auto im_j = miny + j;
 
-					imgout.get_pixel(im_i, im_j, values.data());
-					imgdst.set_pixel(i, j, values.data());
+					imgout.get_pixel(im_i, im_j, values);
+					imgdst.set_pixel(i, j, values);
 				}
 			}
 		}
 
+		delete[] values;
 
 		double offset_x, offset_y;
 		params.dem_transform.xy(dem_bbox_minx + minx, dem_bbox_miny + miny, offset_x, offset_y);
