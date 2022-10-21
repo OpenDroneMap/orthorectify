@@ -41,11 +41,9 @@ namespace orthorectify {
 		const bool with_alpha;
 		const std::string& wkt;
 
-		const GDALDataType type;
-
 	};
 
-	template <typename T, typename S>
+	template <typename T>
 	void process_image(const std::string& in_path, const std::string& out_path, const ProcessingParameters<T>& params)
 	{
 
@@ -93,7 +91,7 @@ namespace orthorectify {
 			DBG << "Populated distance map";
 		}
 
-		RawImage<S> image(in_path);
+		RawImage image(in_path);
 
 		const int img_w = image.width();
 		const int img_h = image.height();
@@ -105,7 +103,7 @@ namespace orthorectify {
 		const auto f = shot.camera_focal * MAX(img_h, img_w);
 
 		DBG << "Camera focal: " << shot.camera_focal << " coefficient " << f;
-		INF << "Image dimensions: " << img_w << "x" << img_h << " pixels (" << bands << " bands with type " << GDALGetDataTypeName(image.type()) << ")";
+		INF << "Image dimensions: " << img_w << "x" << img_h << " pixels (" << bands << " bands)";
 
 		const auto a1 = shot.rotation_matrix(0, 0);
 		const auto b1 = shot.rotation_matrix(0, 1);
@@ -158,10 +156,10 @@ namespace orthorectify {
 
 		INF << "Iterating over DEM box: [(" << dem_bbox_minx << ", " << dem_bbox_miny << "), (" << dem_bbox_maxx << ", " << dem_bbox_maxy << ")] (" << dem_bbox_w << "x" << dem_bbox_h << " pixels)";
 
-		RawImage<S> imgout(dem_bbox_w, dem_bbox_h, bands, "GTiff", params.type);
+		RawImage imgout(dem_bbox_w, dem_bbox_h, image.has_alpha(), "GTiff");
 
-		std::vector<S> values(bands);
-		memset(values.data(), 0, values.size() * sizeof(S));
+		std::vector<uint8_t> values(bands);
+		memset(values.data(), 0, values.size());
 
 		auto minx = dem_bbox_w;
 		auto miny = dem_bbox_h;
@@ -295,10 +293,10 @@ namespace orthorectify {
 
 		const auto target_bands = params.with_alpha ? bands + 1 : bands;
 
-		RawImage<S> imgdst(out_w, out_h, target_bands, "GTiff", params.type);
+		RawImage imgdst(out_w, out_h, params.with_alpha, "GTiff");
 
 		values.resize(target_bands);
-		memset(values.data(), 0, target_bands * sizeof(S));
+		memset(values.data(), 0, target_bands );
 
 		if (params.with_alpha) {
 
@@ -350,7 +348,7 @@ namespace orthorectify {
 		double offset_x, offset_y;
 		params.dem_transform.xy(dem_bbox_minx + minx, dem_bbox_miny + miny, offset_x, offset_y);
 
-		imgdst.write(out_path, "", [&params, offset_x, offset_y, out_w, out_h, bands](GDALDataset* ds) {
+		imgdst.write(out_path, "", [&params, offset_x, offset_y, out_w, out_h](GDALDataset* ds) {
 
 			double transform[6] = {
 				params.dem_transform[0],
@@ -373,7 +371,7 @@ namespace orthorectify {
 			if (!params.wkt.empty())
 				ds->SetProjection(params.wkt.c_str());
 
-			});
+		});
 
 		const auto elapsed = std::chrono::high_resolution_clock::now() - start;
 
