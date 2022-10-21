@@ -1,3 +1,2 @@
-// the configured options and settings for Tutorial
 #define VERSION_MAJOR @Orthorectify_VERSION_MAJOR@
 #define VERSION_MINOR @Orthorectify_VERSION_MINOR@
