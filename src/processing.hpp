@@ -41,9 +41,11 @@ namespace orthorectify {
 		const bool with_alpha;
 		const std::string& wkt;
 
+		const GDALDataType type;
+
 	};
 
-	template <typename T>
+	template <typename T, typename S>
 	void process_image(const std::string& in_path, const std::string& out_path, const ProcessingParameters<T>& params)
 	{
 
@@ -91,7 +93,7 @@ namespace orthorectify {
 			DBG << "Populated distance map";
 		}
 
-		RawImage image(in_path);
+		RawImage<S> image(in_path);
 
 		const int img_w = image.width();
 		const int img_h = image.height();
@@ -103,8 +105,7 @@ namespace orthorectify {
 		const auto f = shot.camera_focal * MAX(img_h, img_w);
 
 		DBG << "Camera focal: " << shot.camera_focal << " coefficient " << f;
-
-		INF << "Image dimensions: " << img_w << "x" << img_h << " pixels (" << bands << " bands)";
+		INF << "Image dimensions: " << img_w << "x" << img_h << " pixels (" << bands << " bands with type " << GDALGetDataTypeName(image.type()) << ")";
 
 		const auto a1 = shot.rotation_matrix(0, 0);
 		const auto b1 = shot.rotation_matrix(0, 1);
@@ -157,10 +158,10 @@ namespace orthorectify {
 
 		INF << "Iterating over DEM box: [(" << dem_bbox_minx << ", " << dem_bbox_miny << "), (" << dem_bbox_maxx << ", " << dem_bbox_maxy << ")] (" << dem_bbox_w << "x" << dem_bbox_h << " pixels)";
 
-		RawImage imgout(dem_bbox_w, dem_bbox_h, bands, "GTiff");
+		RawImage<S> imgout(dem_bbox_w, dem_bbox_h, bands, "GTiff", params.type);
 
-		std::vector<uint8_t> values(bands);
-		memset(values.data(), 0, values.size());
+		std::vector<S> values(bands);
+		memset(values.data(), 0, values.size() * sizeof(S));
 
 		auto minx = dem_bbox_w;
 		auto miny = dem_bbox_h;
@@ -294,10 +295,10 @@ namespace orthorectify {
 
 		const auto target_bands = params.with_alpha ? bands + 1 : bands;
 
-		RawImage imgdst(out_w, out_h, target_bands, "GTiff");
+		RawImage<S> imgdst(out_w, out_h, target_bands, "GTiff", params.type);
 
 		values.resize(target_bands);
-		memset(values.data(), 0, target_bands * sizeof(uint8_t));
+		memset(values.data(), 0, target_bands * sizeof(S));
 
 		if (params.with_alpha) {
 

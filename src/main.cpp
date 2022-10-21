@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 
 		switch (dem_band_type) {
 		case GDT_Float32:
-			process_image(image_path, out_path, ProcessingParameters<float> {
+			process_image<float, uint8_t>(image_path, out_path, ProcessingParameters<float> {
 				params.skip_visibility_test,
 					shot,
 					has_nodata,
@@ -207,12 +207,13 @@ int main(int argc, char** argv)
 					(float*)dem_data,
 					params.interpolation,
 					params.with_alpha,
-					wkt
+					wkt,
+					GDT_Byte
 			}
 			);
 			break;
 		case GDT_Byte:
-			process_image(image_path, out_path, ProcessingParameters<uint8_t> {
+			process_image<uint8_t, uint8_t>(image_path, out_path, ProcessingParameters<uint8_t> {
 				params.skip_visibility_test,
 					shot,
 					has_nodata,
@@ -227,12 +228,13 @@ int main(int argc, char** argv)
 					(uint8_t*)dem_data,
 					params.interpolation,
 					params.with_alpha,
-					wkt
+					wkt,
+					GDT_Byte
 			}
 			);
 			break;
 		case GDT_UInt16:
-			process_image(image_path, out_path, ProcessingParameters<uint16_t> {
+			process_image<uint16_t, uint8_t>(image_path, out_path, ProcessingParameters<uint16_t> {
 				params.skip_visibility_test,
 					shot,
 					has_nodata,
@@ -247,7 +249,8 @@ int main(int argc, char** argv)
 					(uint16_t*)dem_data,
 					params.interpolation,
 					params.with_alpha,
-					tmp_wkt
+					tmp_wkt,
+					GDT_Byte
 			}
 			);
 			break;
