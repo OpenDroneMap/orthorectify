@@ -116,7 +116,7 @@ namespace orthorectify {
 		const auto b3 = shot.rotation_matrix(2, 1);
 		const auto c3 = shot.rotation_matrix(2, 2);
 
-		DemInfo info{
+		DemInfo info {
 			a1, b1, c1,
 			a2, b2, c2,
 			a3, b3, c3,
@@ -129,16 +129,16 @@ namespace orthorectify {
 		};
 
 		double dem_ul_x, dem_ul_y;
-		dem_coordinates(-half_img_w, -half_img_h, info, dem_ul_x, dem_ul_y);
+		info.get_coordinates(-half_img_w, -half_img_h, dem_ul_x, dem_ul_y);
 
 		double dem_ur_x, dem_ur_y;
-		dem_coordinates(half_img_w, -half_img_h, info, dem_ur_x, dem_ur_y);
+		info.get_coordinates(half_img_w, -half_img_h, dem_ur_x, dem_ur_y);
 
 		double dem_lr_x, dem_lr_y;
-		dem_coordinates(half_img_w, half_img_h, info, dem_lr_x, dem_lr_y);
+		info.get_coordinates(half_img_w, half_img_h, dem_lr_x, dem_lr_y);
 
 		double dem_ll_x, dem_ll_y;
-		dem_coordinates(-half_img_w, half_img_h, info, dem_ll_x, dem_ll_y);
+		info.get_coordinates(-half_img_w, half_img_h, dem_ll_x, dem_ll_y);
 
 		const auto x_list = { dem_ul_x, dem_ur_x, dem_lr_x, dem_ll_x };
 		const auto y_list = { dem_ul_y, dem_ur_y, dem_lr_y, dem_ll_y };

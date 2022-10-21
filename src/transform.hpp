@@ -58,42 +58,24 @@ namespace orthorectify {
 		double dem_offset_x;
 		double dem_offset_y;
 		Transform& transform;
+
+		void get_coordinates(
+			const int cpx,
+			const int cpy,
+			double& x,
+			double& y)
+		{
+
+			const auto Za = this->dem_min_value;
+			const auto m = (a3 * b1 * cpy - a1 * b3 * cpy - (a3 * b2 - a2 * b3) * cpx - (a2 * b1 - a1 * b2) * f);
+			const auto Xa = static_cast<double>(this->dem_offset_x) + (m * Xs + (b3 * c1 * cpy - b1 * c3 * cpy - (b3 * c2 - b2 * c3) * cpx - (b2 * c1 - b1 * c2) * f) * Za - (b3 * c1 * cpy - b1 * c3 * cpy - (b3 * c2 - b2 * c3) * cpx - (b2 * c1 - b1 * c2) * f) * Zs) / m;
+			const auto Ya = static_cast<double>(this->dem_offset_y) + (m * Ys - (a3 * c1 * cpy - a1 * c3 * cpy - (a3 * c2 - a2 * c3) * cpx - (a2 * c1 - a1 * c2) * f) * Za + (a3 * c1 * cpy - a1 * c3 * cpy - (a3 * c2 - a2 * c3) * cpx - (a2 * c1 - a1 * c2) * f) * Zs) / m;
+
+			this->transform.index(Xa, Ya, x, y);
+
+		}
+		
 	};
-
-	inline void dem_coordinates(
-		const int cpx,
-		const int cpy,
-		const DemInfo& info,
-		double& x,
-		double& y)
-	{
-
-		const auto a1 = info.a1;
-		const auto b1 = info.b1;
-		const auto c1 = info.c1;
-		const auto a2 = info.a2;
-		const auto b2 = info.b2;
-		const auto c2 = info.c2;
-		const auto a3 = info.a3;
-		const auto b3 = info.b3;
-		const auto c3 = info.c3;
-
-		const auto Xs = info.Xs;
-		const auto Ys = info.Ys;
-		const auto Zs = info.Zs;
-
-		const auto f = info.f;
-
-		const auto Za = info.dem_min_value;
-		const auto m = (a3 * b1 * cpy - a1 * b3 * cpy - (a3 * b2 - a2 * b3) * cpx - (a2 * b1 - a1 * b2) * f);
-		const auto Xa = static_cast<double>(info.dem_offset_x) + (m * Xs + (b3 * c1 * cpy - b1 * c3 * cpy - (b3 * c2 - b2 * c3) * cpx - (b2 * c1 - b1 * c2) * f) * Za - (b3 * c1 * cpy - b1 * c3 * cpy - (b3 * c2 - b2 * c3) * cpx - (b2 * c1 - b1 * c2) * f) * Zs) / m;
-		const auto Ya = static_cast<double>(info.dem_offset_y) + (m * Ys - (a3 * c1 * cpy - a1 * c3 * cpy - (a3 * c2 - a2 * c3) * cpx - (a2 * c1 - a1 * c2) * f) * Za + (a3 * c1 * cpy - a1 * c3 * cpy - (a3 * c2 - a2 * c3) * cpx - (a2 * c1 - a1 * c2) * f) * Zs) / m;
-
-        info.transform.index(Xa, Ya, x, y);
-
-		//transform_coordinates(info.geotransform, Xa, Ya, x, y);
-
-	}
 
 
 }

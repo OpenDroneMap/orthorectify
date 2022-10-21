@@ -181,6 +181,7 @@ int main(int argc, char** argv)
 		cnt++;
 		
 		const auto shot_ext = fs::path(shot.id).extension();
+		
 		// Add .tif if shot.id does not end with it
 		const auto shot_file_name = shot_ext == ".tif" ? shot.id : shot.id + ".tif";
 
