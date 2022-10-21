@@ -34,7 +34,7 @@ namespace orthorectify {
 			ERR << err;
 			throw std::runtime_error(err);
 		}
-
+		
 		static void _get_min_max(GDALRasterBand* band, double& min, double& max)
 		{
 			int bGotMin, bGotMax;
@@ -165,6 +165,32 @@ namespace orthorectify {
 					
 					b->RasterIO(GF_Read, 0, 0, this->_width, this->_height, r, this->_width, this->_height, GDT_UInt32, 0, 0);
 					
+					for (auto i = 0; i < this->_width * this->_height; i++) {
+
+						const auto scaled = static_cast<uint8_t>((r[i] - min) / (max - min) * 256);
+
+						this->R[i] = scaled;
+						this->G[i] = scaled;
+						this->B[i] = scaled;
+					}
+
+					delete[] r;
+
+				}
+				else if (type == GDT_Float32) {
+
+					this->R = new uint8_t[size];
+					this->G = new uint8_t[size];
+					this->B = new uint8_t[size];
+
+					auto* r = new float[this->_width * this->_height];
+
+					const auto b = ds->GetRasterBand(1);
+					double min, max;
+					_get_min_max(b, min, max);
+
+					b->RasterIO(GF_Read, 0, 0, this->_width, this->_height, r, this->_width, this->_height, GDT_Float32, 0, 0);
+
 					for (auto i = 0; i < this->_width * this->_height; i++) {
 
 						const auto scaled = static_cast<uint8_t>((r[i] - min) / (max - min) * 256);
