@@ -23,8 +23,8 @@ int main(int argc, char** argv)
 	if (!fs::exists(params.outdir))
 		fs::create_directories(params.outdir);
 
-	plog::ColorConsoleAppender<plog::CleanTextFormatter> consoleAppender;
-	plog::init(params.verbose ? plog::debug : plog::info, &consoleAppender);
+	plog::ColorConsoleAppender<plog::CleanTextFormatter> console_appender;
+	plog::init(params.verbose ? plog::debug : plog::info, &console_appender);
 
 	if (!params.target_images.empty()) {
 		INF << "Processing " << params.target_images.size() << " images";
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 	// Get CRS
 	const char* tmp_wkt = dem->GetProjectionRef();
 
-	std::string wkt = "";
+	std::string wkt;
 
 	if (tmp_wkt != nullptr)
 	{
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 		INF << "DEM offset (" << dem_offset_x << ", " << dem_offset_y << ")";
 
 		wkt = tmp_wkt;
-	}	
+	}
 
 	const int h = dem->GetRasterYSize();
 	const int w = dem->GetRasterXSize();
@@ -150,6 +150,10 @@ int main(int argc, char** argv)
 	case GDT_UInt16:
 		dem_data = new uint16_t[size];
 		break;
+	default: 
+		ERR << "Unexpected DEM band data type";
+		exit(1);
+		
 	}
 
 	if (dem_band->RasterIO(GF_Read, 0, 0, w, h, dem_data, w, h, dem_band_type, 0, 0) != CE_None) {
@@ -179,9 +183,9 @@ int main(int argc, char** argv)
 
 		INF << "Processing shot " << shot.id;
 		cnt++;
-		
+
 		const auto shot_ext = fs::path(shot.id).extension();
-		
+
 		// Add .tif if shot.id does not end with it
 		const auto shot_file_name = shot_ext == ".tif" ? shot.id : shot.id + ".tif";
 
@@ -204,7 +208,7 @@ int main(int argc, char** argv)
 					h,
 					dem_min_value,
 					dem_max_value,
-					(float*)dem_data,
+					static_cast<float*>(dem_data),
 					params.interpolation,
 					params.with_alpha,
 					wkt,
@@ -225,7 +229,7 @@ int main(int argc, char** argv)
 					h,
 					dem_min_value,
 					dem_max_value,
-					(uint8_t*)dem_data,
+					static_cast<uint8_t*>(dem_data),
 					params.interpolation,
 					params.with_alpha,
 					wkt,
@@ -246,7 +250,7 @@ int main(int argc, char** argv)
 					h,
 					dem_min_value,
 					dem_max_value,
-					(uint16_t*)dem_data,
+					static_cast<uint16_t*>(dem_data),
 					params.interpolation,
 					params.with_alpha,
 					tmp_wkt,
@@ -254,20 +258,26 @@ int main(int argc, char** argv)
 			}
 			);
 			break;
-		}		
+		default:
+
+			ERR << "Unexpected DEM band type";
+			exit(1);
+		}
 	}
 
 	switch (dem_band_type) {
-	case GDT_Float32:		
-		delete[](float*)dem_data;		
+	case GDT_Float32:
+		delete[]static_cast<float*>(dem_data);
 		break;
 	case GDT_Byte:
-		delete[](uint8_t*)dem_data;
+		delete[]static_cast<uint8_t*>(dem_data);
 		break;
 	case GDT_UInt16:
-		delete[](uint16_t*)dem_data;
+		delete[]static_cast<uint16_t*>(dem_data);
 		break;
-	}	
+	default:
+		break;
+	}
 
 	elapsed = std::chrono::high_resolution_clock::now() - start;
 

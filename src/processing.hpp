@@ -86,7 +86,7 @@ namespace orthorectify {
 			for (auto j = 0; j < h; j++) {
 				for (auto i = 0; i < w; i++) {
 					const auto val = sqrt((cam_grid_x - i) * (cam_grid_x - i) + (cam_grid_y - j) * (cam_grid_y - j));
-					distance_map_raw[j * w + i] = (float)(val == 0 ? 1e-7 : val);
+					distance_map_raw[j * w + i] = static_cast<float>(val == 0 ? 1e-7 : val);
 				}
 			}
 
@@ -174,11 +174,11 @@ namespace orthorectify {
 		auto* raw_points = points.data();
 		auto* raw_dem_data = params.dem_data;
 
-		for (auto j = dem_bbox_miny; j < dem_bbox_maxy + 1; j++) {
+		for (auto j = dem_bbox_miny; j < dem_bbox_maxy + 1; ++j) {
 
 			auto im_j = j - dem_bbox_miny;
 
-			for (auto i = dem_bbox_minx; i < dem_bbox_maxx + 1; i++) {
+			for (auto i = dem_bbox_minx; i < dem_bbox_maxx + 1; ++i) {
 
 				auto im_i = i - dem_bbox_minx;
 
