@@ -58,12 +58,10 @@ namespace orthorectify {
 		const auto cam_x = Xs + params.dem_offset_x;
 		const auto cam_y = Ys + params.dem_offset_y;
 
-		double tmp_cam_grid_x, tmp_cam_grid_y;
+		double cam_grid_x, cam_grid_y;
 
-		params.dem_transform.index(cam_x, cam_y, tmp_cam_grid_x, tmp_cam_grid_y);
+		params.dem_transform.index(cam_x, cam_y, cam_grid_x, cam_grid_y);
 
-		const int cam_grid_x = static_cast<int>(tmp_cam_grid_x);
-		const int cam_grid_y = static_cast<int>(tmp_cam_grid_y);
 
 		INF << "Rotation matrix: " << str_conv(shot.rotation_matrix);
 		INF << "Origin: (" << shot.origin(0) << ", " << shot.origin(1) << ", " << shot.origin(2) << ")";
@@ -95,8 +93,8 @@ namespace orthorectify {
 
 		const int img_w = image.width();
 		const int img_h = image.height();
-		const int half_img_w = static_cast<int>((static_cast<double>(img_w) - 1) / 2.0);
-		const int half_img_h = static_cast<int>((static_cast<double>(img_h) - 1) / 2.0);
+		const double half_img_w = (img_w - 1) / 2.0;
+		const double half_img_h = (img_h - 1) / 2.0;
 
 		const int bands = image.bands();
 
@@ -158,6 +156,9 @@ namespace orthorectify {
 
 		RawImage imgout(dem_bbox_w, dem_bbox_h, image.has_alpha(), "GTiff");
 
+		auto mask = new bool[dem_bbox_w * dem_bbox_h];
+		memset(mask, 0, dem_bbox_w * dem_bbox_h * sizeof(bool));
+
 		auto* values = new uint8_t[bands];
 		memset(values, 0, bands);
 
@@ -180,7 +181,7 @@ namespace orthorectify {
 
 				auto im_i = i - dem_bbox_minx;
 
-				const auto Za = raw_dem_data[j * w + i];
+				const double Za = (double)raw_dem_data[j * w + i];
 
 				// Skip nodata
 				if (params.has_nodata && Za == params.nodata_value)
@@ -194,9 +195,9 @@ namespace orthorectify {
 				Ya -= params.dem_offset_y;
 
 				// Colinearity function http ://web.pdx.edu/~jduh/courses/geog493f14/Week03.pdf
-				const auto dx = (Xa - Xs);
-				const auto dy = (Ya - Ys);
-				const auto dz = (Za - Zs);
+				const auto dx = Xa - Xs;
+				const auto dy = Ya - Ys;
+				const auto dz = Za - Zs;
 
 				const auto den = a3 * dx + b3 * dy + c3 * dz;
 				const auto x = half_img_w - (f * (a1 * dx + b1 * dy + c1 * dz) / den);
@@ -212,6 +213,8 @@ namespace orthorectify {
 						auto cnt = 0;
 						line(i, j, cam_grid_x, cam_grid_y, raw_points, cnt);
 
+						const auto dist = distance_map_raw[j * w + i];
+
 						bool visible = true;
 						for (auto p = 0; p < cnt; p++)
 						{
@@ -222,7 +225,7 @@ namespace orthorectify {
 							if (px < 0 || py < 0 || px >= w || py >= h)
 								continue;
 
-							const auto ray_z = Zs + dz * (distance_map_raw[py * w + px] / distance_map_raw[j * w + i]);
+							const auto ray_z = Zs + dz * (distance_map_raw[py * w + px] / dist);
 
 							if (ray_z > params.dem_max_value) break;
 
@@ -253,7 +256,9 @@ namespace orthorectify {
 
 						image.get_pixel(xi, yi, values);
 					}
-					
+
+
+
 					// We don't consider all zero values (pure black)
 					// to be valid sample values. This will sometimes miss
 					// valid sample values.
@@ -265,6 +270,7 @@ namespace orthorectify {
 						maxy = MAX(maxy, im_j);
 
 						imgout.set_pixel(im_i, im_j, values);
+						mask[im_j * dem_bbox_w + im_i] = true;
 						//DBG << "Boundaries updated: (" << minx << ", " << miny << ") -> (" << maxx << ", " << maxy << ")" ;
 					}
 
@@ -290,6 +296,8 @@ namespace orthorectify {
 
 		const auto out_w = maxx - minx + 1;
 		const auto out_h = maxy - miny + 1;
+
+		uint8_t black[4] = { 0, 0, 0, 0 };
 
 		const auto target_bands = params.with_alpha ? bands + 1 : bands;
 
@@ -321,9 +329,22 @@ namespace orthorectify {
 							break;
 						}
 					}
-					values[target_bands - 1] = nan ? 0 : 255;
 
+					values[target_bands - 1] = nan ? 0 : 255;
 					imgdst.set_pixel(i, j, values);
+
+					/*
+					if (mask[im_j * dem_bbox_w + im_i]) {
+						values[target_bands - 1] = 255;
+						imgdst.set_pixel(i, j, values);
+					}
+					else {
+						imgdst.set_pixel(i, j, black);
+						//values[target_bands - 1] = 0;
+
+						//values[target_bands - 1] = mask[im_j * dem_bbox_w + im_i] ? 255 : 0;
+					}
+					*/
 
 				}
 			}
@@ -346,6 +367,7 @@ namespace orthorectify {
 		}
 
 		delete[] values;
+		delete[] mask;
 
 		double offset_x, offset_y;
 		params.dem_transform.xy(dem_bbox_minx + minx, dem_bbox_miny + miny, offset_x, offset_y);
