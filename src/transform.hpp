@@ -60,8 +60,8 @@ namespace orthorectify {
 		Transform& transform;
 
 		void get_coordinates(
-			const int cpx,
-			const int cpy,
+			const double cpx,
+			const double cpy,
 			double& x,
 			double& y)
 		{
