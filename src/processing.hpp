@@ -22,7 +22,7 @@ namespace orthorectify {
 		const bool skip_visibility_test;
 		const Shot& shot;
 		const bool has_nodata;
-		const float nodata_value;
+		const double nodata_value;
 
 		Transform& dem_transform;
 
@@ -59,17 +59,18 @@ namespace orthorectify {
 		const auto cam_y = Ys + params.dem_offset_y;
 
 		double cam_grid_x, cam_grid_y;
-
 		params.dem_transform.index(cam_x, cam_y, cam_grid_x, cam_grid_y);
 
+		int cam_grid_x_int = static_cast<int>(cam_grid_x);
+		int cam_grid_y_int = static_cast<int>(cam_grid_y);
 
 		INF << "Rotation matrix: " << str_conv(shot.rotation_matrix);
 		INF << "Origin: (" << shot.origin(0) << ", " << shot.origin(1) << ", " << shot.origin(2) << ")";
 		INF << "DEM index: (" << cam_grid_x << ", " << cam_grid_y << ")";
 		INF << "Camera pose: (" << Xs << ", " << Ys << ", " << Zs << ")";
 
-		std::vector<float> distance_map;
-		float* distance_map_raw = nullptr;
+		std::vector<double> distance_map;
+		double* distance_map_raw = nullptr;
 
 		const auto h = params.dem_height;
 		const auto w = params.dem_width;
@@ -82,7 +83,7 @@ namespace orthorectify {
 			for (auto j = 0; j < h; j++) {
 				for (auto i = 0; i < w; i++) {
 					const auto val = sqrt((cam_grid_x - i) * (cam_grid_x - i) + (cam_grid_y - j) * (cam_grid_y - j));
-					distance_map_raw[j * w + i] = static_cast<float>(val == 0 ? 1e-7 : val);
+					distance_map_raw[j * w + i] = val == 0 ? 1e-7 : val;
 				}
 			}
 
@@ -168,8 +169,8 @@ namespace orthorectify {
 		auto maxy = 0;
 
 		std::vector<Point> points;
-		const auto cnt = static_cast<int>(std::sqrt(cam_grid_x * cam_grid_x + cam_grid_y * cam_grid_y));
-		points.resize(cnt);
+		const auto max_count = static_cast<int>(std::sqrt(cam_grid_x * cam_grid_x + cam_grid_y * cam_grid_y));
+		points.resize(max_count);
 		auto* raw_points = points.data();
 		auto* raw_dem_data = params.dem_data;
 
@@ -181,7 +182,7 @@ namespace orthorectify {
 
 				auto im_i = i - dem_bbox_minx;
 
-				const double Za = (double)raw_dem_data[j * w + i];
+				const auto Za = static_cast<double>(raw_dem_data[j * w + i]);
 
 				// Skip nodata
 				if (params.has_nodata && Za == params.nodata_value)
@@ -211,7 +212,7 @@ namespace orthorectify {
 					if (!params.skip_visibility_test)
 					{
 						auto cnt = 0;
-						line(i, j, cam_grid_x, cam_grid_y, raw_points, cnt);
+						line(i, j, cam_grid_x_int, cam_grid_y_int, raw_points, cnt);
 
 						const auto dist = distance_map_raw[j * w + i];
 
@@ -256,7 +257,6 @@ namespace orthorectify {
 
 						image.get_pixel(xi, yi, values);
 					}
-
 
 
 					// We don't consider all zero values (pure black)
@@ -319,7 +319,7 @@ namespace orthorectify {
 
 					imgout.get_pixel(im_i, im_j, values);
 
-					bool nan = true;
+					/*bool nan = true;
 
 					for (auto b = 0; b < bands; ++b)
 					{
@@ -332,8 +332,8 @@ namespace orthorectify {
 
 					values[target_bands - 1] = nan ? 0 : 255;
 					imgdst.set_pixel(i, j, values);
-
-					/*
+					*/
+					
 					if (mask[im_j * dem_bbox_w + im_i]) {
 						values[target_bands - 1] = 255;
 						imgdst.set_pixel(i, j, values);
@@ -344,7 +344,7 @@ namespace orthorectify {
 
 						//values[target_bands - 1] = mask[im_j * dem_bbox_w + im_i] ? 255 : 0;
 					}
-					*/
+					
 
 				}
 			}

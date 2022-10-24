@@ -9,7 +9,7 @@
 
 #include "gdal_priv.h"
 
-#define IDX(x, y) (x + y * _width)
+#define IDX(x, y) ((x) + (y) * _width)
 
 namespace fs = std::filesystem;
 
@@ -90,9 +90,9 @@ namespace orthorectify {
 		}
 
 
-		void get_pixel(const int x, const int y, uint8_t* out) const;
-		void set_pixel(const int x, const int y, const uint8_t* in);
-		void bilinear_interpolate(const double x, const double y, uint8_t* out) const;
+		void get_pixel(int x, int y, uint8_t* out) const;
+		void set_pixel(int x, int y, const uint8_t* in);
+		void bilinear_interpolate(double x, double y, uint8_t* out) const;
 		void write(const std::string& path, const std::string& driver, const std::function<void(GDALDataset*)>& configure);
 	};
 
