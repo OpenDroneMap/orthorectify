@@ -184,6 +184,11 @@ namespace orthorectify {
 
 				const auto Za = static_cast<double>(raw_dem_data[j * w + i]);
 
+				//if (im_i == 415 && im_j == 436)
+				//{
+				//	LOGD << "dem(" << i << ", " << j << ") = " << Za << " -> imgout(" << im_i << ", " << im_j << ")";
+				//}
+
 				// Skip nodata
 				if (params.has_nodata && Za == params.nodata_value)
 					continue;
@@ -248,7 +253,18 @@ namespace orthorectify {
 						const auto xi = img_w - 1 - x;
 						const auto yi = img_h - 1 - y;
 
+						//if (im_i == 415 && im_j == 436)
+						//{
+						//	std::cout << std::endl;
+						//}
+
 						image.bilinear_interpolate(xi, yi, values);
+
+						//if (im_i == 415 && im_j == 436)
+						//{
+						//	LOGD << "bilinear interpolated at (" << xi << ", " << yi << ") -> (" << (int)values[0] << ", " << (int)values[1] << ", " << (int)values[2] << ")";
+						//}
+
 					}
 					else
 					{
@@ -317,34 +333,20 @@ namespace orthorectify {
 					const auto im_i = minx + i;
 					const auto im_j = miny + j;
 
+					values[target_bands - 1] = 0;
 					imgout.get_pixel(im_i, im_j, values);
 
-					/*bool nan = true;
+					//if (i == 313 && j == 197)
+					//{
+					//	LOGD << "imgdst(" << i << ", " << j << ") <- imgout(" << im_i << ", " << im_j << ") = (" << (int)values[0] << ", " << (int)values[1] << ", " << (int)values[2] << ", " << (int)values[3] << ") masked " << mask[im_j * dem_bbox_w + im_i];
+					//}
 
-					for (auto b = 0; b < bands; ++b)
-					{
-						if (values[b] != 0)
-						{
-							nan = false;
-							break;
-						}
-					}
-
-					values[target_bands - 1] = nan ? 0 : 255;
-					imgdst.set_pixel(i, j, values);
-					*/
-					
 					if (mask[im_j * dem_bbox_w + im_i]) {
 						values[target_bands - 1] = 255;
 						imgdst.set_pixel(i, j, values);
-					}
-					else {
+					} else {
 						imgdst.set_pixel(i, j, black);
-						//values[target_bands - 1] = 0;
-
-						//values[target_bands - 1] = mask[im_j * dem_bbox_w + im_i] ? 255 : 0;
 					}
-					
 
 				}
 			}

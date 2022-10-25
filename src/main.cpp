@@ -70,6 +70,8 @@ int main(int argc, char** argv)
 	{
 		ERR << "DEM band data type " << GDALGetDataTypeName(dem_band_type) << " is not supported";
 		exit(1);
+	} else {
+		DBG << "DEM band type " << GDALGetDataTypeName(dem_band_type);
 	}
 
 	double dem_min_value, dem_max_value;
