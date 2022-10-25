@@ -92,6 +92,12 @@ namespace orthorectify {
 			const auto& dem = result["dem"].as<std::string>();
 			this->dem_path = dem == default_dem_path ? (fs::path(dataset_path) / default_dem_path).generic_string() : dem;
 
+			if (!fs::exists(this->dem_path))
+			{
+				std::cerr << "Error: DEM file '" << this->dem_path << "' does not exist" << std::endl;
+				exit(1);
+			}
+
 			const auto tmpInterpolation = result["interpolation"].as<std::string>();
 
 			if (tmpInterpolation == "bilinear")
@@ -126,16 +132,16 @@ namespace orthorectify {
 				const auto& tmp_image_list = result["image-list"].as<std::string>();
 				const auto& image_list_path = tmp_image_list == default_image_list ? (fs::path(dataset_path) / default_image_list).generic_string() : tmp_image_list;
 
+				if (!fs::exists(image_list_path))
+				{
+					std::cerr << "Error: Image list file '" << image_list_path << "' does not exist" << std::endl;
+					exit(1);
+				}
+
 				this->target_images = read_image_list(image_list_path);
 			}
 
 			this->outdir = outdir == default_outdir ? fs::path(dataset_path) / default_outdir : fs::path(outdir);
-
-			if (!fs::exists(this->dem_path))
-			{
-				ERR << "DEM file " << this->dem_path << " does not exist";
-				exit(1);
-			}
 
 		}
 

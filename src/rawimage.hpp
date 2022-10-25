@@ -31,6 +31,8 @@ namespace orthorectify {
 		void _throw_last_error();
 		void _get_min_max(GDALRasterBand* band, double& min, double& max);
 		void _load(const std::string& path);
+		void _readBand(GDALDataset* ds, int band, void *data, GDALDataType type);
+		bool _areBandsOmogeneous(GDALDataset* ds, GDALDataType &type);
 
 	public:
 
