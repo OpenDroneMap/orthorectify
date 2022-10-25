@@ -145,7 +145,7 @@ namespace orthorectify {
 
                 for (auto i = 0; i < this->_width * this->_height; i++) {
 
-                    const auto scaled = static_cast<uint8_t>((r[i] - min) / (max - min) * 256);
+                    const auto scaled = static_cast<uint8_t>(std::ceil((r[i] - min) / (max - min) * 255.0));
 
                     this->R[i] = scaled;
                     this->G[i] = scaled;
@@ -171,7 +171,7 @@ namespace orthorectify {
 
                 for (auto i = 0; i < this->_width * this->_height; i++) {
 
-                    const auto scaled = static_cast<uint8_t>((r[i] - min) / (max - min) * 256);
+                    const auto scaled = static_cast<uint8_t>(std::ceil((r[i] - min) / (max - min) * 255.0));
 
                     this->R[i] = scaled;
                     this->G[i] = scaled;
@@ -260,13 +260,19 @@ namespace orthorectify {
         const auto wc = (x - x0) * (y1 - y);
         const auto wd = (x - x0) * (y - y0);
 
-        out[0] = std::ceil(wa * R[y0 * width + x0] + wb * R[y1 * width + x0] + wc * R[y0 * width + x1] + wd * R[y1 * width + x1]);
-        out[1] = std::ceil(wa * G[y0 * width + x0] + wb * G[y1 * width + x0] + wc * G[y0 * width + x1] + wd * G[y1 * width + x1]);
-        out[2] = std::ceil(wa * B[y0 * width + x0] + wb * B[y1 * width + x0] + wc * B[y0 * width + x1] + wd * B[y1 * width + x1]);
+        out[0] = static_cast<uint8_t>(std::ceil(
+            wa * R[y0 * width + x0] + wb * R[y1 * width + x0] + wc * R[y0 * width + x1] + wd * R[y1 * width + x1]));
+
+        out[1] = static_cast<uint8_t>(std::ceil(
+            wa * G[y0 * width + x0] + wb * G[y1 * width + x0] + wc * G[y0 * width + x1] + wd * G[y1 * width + x1]));
+
+        out[2] = static_cast<uint8_t>(std::ceil(
+            wa * B[y0 * width + x0] + wb * B[y1 * width + x0] + wc * B[y0 * width + x1] + wd * B[y1 * width + x1]));
 
         if (_has_alpha)
         {
-            out[3] = std::ceil(wa * A[y0 * width + x0] + wb * A[y1 * width + x0] + wc * A[y0 * width + x1] + wd * A[y1 * width + x1]);
+            out[3] = static_cast<uint8_t>(std::ceil(
+                wa * A[y0 * width + x0] + wb * A[y1 * width + x0] + wc * A[y0 * width + x1] + wd * A[y1 * width + x1]));
         }
 
     }
