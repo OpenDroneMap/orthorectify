@@ -86,10 +86,9 @@ namespace orthorectify {
 		coords_file.close();
 	}
 
-    void pretty_print_crs(const char*& demWkt)
+    void pretty_print_crs(const char* demWkt)
 	{
-		OGRSpatialReference demSrs;
-		demSrs.importFromWkt(&demWkt);
+		const OGRSpatialReference demSrs(demWkt);
 		char* ptr;
 
 		demSrs.exportToProj4(&ptr);
@@ -134,7 +133,7 @@ namespace orthorectify {
 	}
 
     // Generate line pixel coordinates
-	void line(int startx, int starty, int endx, int endy, Point* out, int& cnt) {
+	void line(int startx, int starty, int endx, int endy, Point* out, int& cnt, int guard) {
 
 		const auto dx = endx - startx;
 		const auto dy = endy - starty;
@@ -150,6 +149,11 @@ namespace orthorectify {
 		auto idx = 0;
 
 		while (true) {
+
+			if (idx >= guard)
+			{
+				std::cout << std::endl;
+			}
 
 			auto& p = out[idx];
 
@@ -186,7 +190,6 @@ namespace orthorectify {
 			for (auto j = 0; j < mtrx.cols(); j++) {
 				stream << mtrx(i, j) << " ";
 			}
-			stream;
 		}
 		return stream.str();
 	}

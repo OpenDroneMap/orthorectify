@@ -70,9 +70,9 @@ int main(int argc, char** argv)
 	{
 		ERR << "DEM band data type " << GDALGetDataTypeName(dem_band_type) << " is not supported";
 		exit(1);
-	} else {
-		DBG << "DEM band type " << GDALGetDataTypeName(dem_band_type);
 	}
+
+	DBG << "DEM band type " << GDALGetDataTypeName(dem_band_type);
 
 	double dem_min_value, dem_max_value;
 	get_band_min_max(dem_band, dem_min_value, dem_max_value);
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 
 		INF << "DEM offset (" << dem_offset_x << ", " << dem_offset_y << ")";
 
-		wkt = tmp_wkt;
+		wkt = std::string(tmp_wkt);
 	}
 
 	const int h = dem->GetRasterYSize();
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
 	void* dem_data;
 
 	auto size = static_cast<size_t>(w) * h;
-
+	
 	switch (dem_band_type) {
 	case GDT_Float32:
 		dem_data = new float[size];
@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 					static_cast<uint16_t*>(dem_data),
 					params.interpolation,
 					params.with_alpha,
-					tmp_wkt
+					wkt
 			}
 			);
 			break;

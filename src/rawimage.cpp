@@ -168,11 +168,6 @@ namespace orthorectify {
 
 				for (auto i = 0; i < this->_width * this->_height; i++) {
 
-					//if (i == 1180119)
-					//{
-					//    std::cout << std::endl;
-					//}
-
 					const auto scaled = static_cast<uint8_t>(std::ceil((r[i] - min) / (max - min) * 255.0));
 
 					this->R[i] = scaled;
@@ -341,8 +336,11 @@ namespace orthorectify {
 		if (fs::exists(path))
 			fs::remove(path);
 
-		auto* mem_driver = GetGDALDriverManager()->GetDriverByName("MEM");
-		auto* dst_driver = GetGDALDriverManager()->GetDriverByName(driver.empty() ? _driver.c_str() : driver.c_str());
+
+		const auto driver_manager = GetGDALDriverManager();
+
+		auto* mem_driver = driver_manager->GetDriverByName("MEM");
+		auto* dst_driver = driver_manager->GetDriverByName(driver.empty() ? _driver.c_str() : driver.c_str());
 
 		auto* mem_ds = mem_driver->Create("", _width, _height, _has_alpha ? 4 : 3, GDT_Byte, nullptr);
 
@@ -353,7 +351,7 @@ namespace orthorectify {
 
 		if (configure != nullptr) configure(mem_ds);
 
-		auto first_band = mem_ds->GetRasterBand(1);
+		const auto first_band = mem_ds->GetRasterBand(1);
 		first_band->SetColorInterpretation(GCI_RedBand);
 
 		if (first_band->RasterIO(GF_Write, 0, 0, _width, _height, this->R, _width, _height, GDT_Byte, 0, 0) != CE_None) {
@@ -362,7 +360,7 @@ namespace orthorectify {
 			_throw_last_error();
 		}
 
-		auto second_band = mem_ds->GetRasterBand(2);
+		const auto second_band = mem_ds->GetRasterBand(2);
 		second_band->SetColorInterpretation(GCI_GreenBand);
 
 		if (second_band->RasterIO(GF_Write, 0, 0, _width, _height, this->G, _width, _height, GDT_Byte, 0, 0) != CE_None) {
@@ -371,7 +369,7 @@ namespace orthorectify {
 			_throw_last_error();
 		}
 
-		auto third_band = mem_ds->GetRasterBand(3);
+		const auto third_band = mem_ds->GetRasterBand(3);
 		third_band->SetColorInterpretation(GCI_BlueBand);
 
 		if (third_band->RasterIO(GF_Write, 0, 0, _width, _height, this->B, _width, _height, GDT_Byte, 0, 0) != CE_None) {
@@ -382,8 +380,7 @@ namespace orthorectify {
 
 		if (_has_alpha)
 		{
-
-			auto fourth_band = mem_ds->GetRasterBand(4);
+			const auto fourth_band = mem_ds->GetRasterBand(4);
 			fourth_band->SetColorInterpretation(GCI_AlphaBand);
 
 			if (fourth_band->RasterIO(GF_Write, 0, 0, _width, _height, this->A, _width, _height, GDT_Byte, 0, 0) != CE_None) {
@@ -396,8 +393,6 @@ namespace orthorectify {
 		auto* ds = dst_driver->CreateCopy(path.c_str(), mem_ds, 0, nullptr, nullptr, nullptr);
 
 		if (ds == nullptr) {
-
-			// Last error
 			ERR << "Could not create image at " << path;
 			GDALClose(mem_ds);
 			_throw_last_error();

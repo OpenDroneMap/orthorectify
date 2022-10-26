@@ -69,27 +69,28 @@ namespace orthorectify {
 		INF << "DEM index: (" << cam_grid_x << ", " << cam_grid_y << ")";
 		INF << "Camera pose: (" << Xs << ", " << Ys << ", " << Zs << ")";
 
-		std::vector<double> distance_map;
 		double* distance_map_raw = nullptr;
 
 		const auto h = params.dem_height;
 		const auto w = params.dem_width;
 
-		if (!params.skip_visibility_test)
+		try
 		{
-			distance_map.resize(h * w);
-			distance_map_raw = distance_map.data();
-
-			for (auto j = 0; j < h; j++) {
-				for (auto i = 0; i < w; i++) {
-					const auto val = sqrt((cam_grid_x - i) * (cam_grid_x - i) + (cam_grid_y - j) * (cam_grid_y - j));
-					distance_map_raw[j * w + i] = val == 0 ? 1e-7 : val;
+			
+			if (!params.skip_visibility_test)
+			{
+				distance_map_raw = new double[h * w];
+				
+				for (auto j = 0; j < h; j++) {
+					for (auto i = 0; i < w; i++) {
+						const auto val = sqrt((cam_grid_x - i) * (cam_grid_x - i) + (cam_grid_y - j) * (cam_grid_y - j));
+						distance_map_raw[j * w + i] = val == 0 ? 1e-7 : val;
+					}
 				}
+
+				DBG << "Populated distance map";
 			}
 
-			DBG << "Populated distance map";
-		}
-		try {
 			RawImage image(in_path);
 
 			const int img_w = image.width();
@@ -168,10 +169,9 @@ namespace orthorectify {
 			auto maxx = 0;
 			auto maxy = 0;
 
-			std::vector<Point> points;
-			const auto max_count = static_cast<int>(std::sqrt(cam_grid_x * cam_grid_x + cam_grid_y * cam_grid_y));
-			points.resize(max_count);
-			auto* raw_points = points.data();
+			Point* raw_points;
+			const auto max_count = static_cast<size_t>(std::ceil(std::sqrt(dem_bbox_maxx * dem_bbox_maxx + dem_bbox_maxy * dem_bbox_maxy)));
+			raw_points = new Point[max_count];
 			auto* raw_dem_data = params.dem_data;
 
 			for (auto j = dem_bbox_miny; j < dem_bbox_maxy + 1; ++j) {
@@ -183,11 +183,6 @@ namespace orthorectify {
 					auto im_i = i - dem_bbox_minx;
 
 					const auto Za = static_cast<double>(raw_dem_data[j * w + i]);
-
-					//if (im_i == 415 && im_j == 436)
-					//{
-					//	LOGD << "dem(" << i << ", " << j << ") = " << Za << " -> imgout(" << im_i << ", " << im_j << ")";
-					//}
 
 					// Skip nodata
 					if (params.has_nodata && Za == params.nodata_value)
@@ -217,7 +212,7 @@ namespace orthorectify {
 						if (!params.skip_visibility_test)
 						{
 							auto cnt = 0;
-							line(i, j, cam_grid_x_int, cam_grid_y_int, raw_points, cnt);
+							line(i, j, cam_grid_x_int, cam_grid_y_int, raw_points, cnt, max_count);
 
 							const auto dist = distance_map_raw[j * w + i];
 
@@ -253,17 +248,7 @@ namespace orthorectify {
 							const auto xi = img_w - 1 - x;
 							const auto yi = img_h - 1 - y;
 
-							//if (im_i == 415 && im_j == 436)
-							//{
-							//	std::cout << std::endl;
-							//}
-
 							image.bilinear_interpolate(xi, yi, values);
-
-							//if (im_i == 415 && im_j == 436)
-							//{
-							//	LOGD << "bilinear interpolated at (" << xi << ", " << yi << ") -> (" << (int)values[0] << ", " << (int)values[1] << ", " << (int)values[2] << ")";
-							//}
 
 						}
 						else
@@ -296,6 +281,8 @@ namespace orthorectify {
 				}
 			}
 
+			delete[] raw_points;
+			delete[] distance_map_raw;
 
 			/*#ifdef DEBUG
 					DBG << "Writing intermediate output image" ;
@@ -336,11 +323,6 @@ namespace orthorectify {
 						values[target_bands - 1] = 0;
 						imgout.get_pixel(im_i, im_j, values);
 
-						//if (i == 313 && j == 197)
-						//{
-						//	LOGD << "imgdst(" << i << ", " << j << ") <- imgout(" << im_i << ", " << im_j << ") = (" << (int)values[0] << ", " << (int)values[1] << ", " << (int)values[2] << ", " << (int)values[3] << ") masked " << mask[im_j * dem_bbox_w + im_i];
-						//}
-
 						if (mask[im_j * dem_bbox_w + im_i]) {
 							values[target_bands - 1] = 255;
 							imgdst.set_pixel(i, j, values);
@@ -375,7 +357,7 @@ namespace orthorectify {
 			double offset_x, offset_y;
 			params.dem_transform.xy(dem_bbox_minx + minx, dem_bbox_miny + miny, offset_x, offset_y);
 
-			imgdst.write(out_path, "", [&params, offset_x, offset_y, out_w, out_h](GDALDataset* ds) {
+			imgdst.write(out_path, "", [&params, offset_x, offset_y](GDALDataset* ds) {
 
 				// Set projection (if any)
 				if (!params.wkt.empty())
@@ -392,12 +374,11 @@ namespace orthorectify {
 
 				ds->SetGeoTransform(transform);
 
-				// Set width and height, is this necessary?
 				ds->SetMetadataItem("AREA_OR_POINT", "Area");
 				ds->SetMetadataItem("TIFFTAG_SOFTWARE", "OpenDroneMap Orthorectify");
 				ds->SetMetadataItem("TIFFTAG_DATETIME", get_formatted_date_time().c_str());
 
-			});
+				});
 
 			const auto elapsed = std::chrono::high_resolution_clock::now() - start;
 

@@ -27,22 +27,22 @@ namespace orthorectify {
 		Bilinear = 2
 	};
 
-	std::vector<std::string> split(const std::string& s, const std::string& delimiter);
-    void trim_end(std::string& str);
-	std::string human_duration(std::chrono::nanoseconds elapsed);
-	void get_dem_offsets(const fs::path& dataset_path, int& dem_offset_x, int& dem_offset_y);
-
-	void pretty_print_crs(const char*& demWkt);
-	void get_band_min_max(GDALRasterBand* demBand, double& dem_min_value, double& dem_max_value, bool approximate = false);
-	void print_bands_info(GDALDataset* ds);
-
 	struct Point {
 		int x;
 		int y;
 	};
 
+	std::vector<std::string> split(const std::string& s, const std::string& delimiter);
+    void trim_end(std::string& str);
+	std::string human_duration(std::chrono::nanoseconds elapsed);
+	void get_dem_offsets(const fs::path& dataset_path, int& dem_offset_x, int& dem_offset_y);
+
+	void pretty_print_crs(const char* demWkt);
+	void get_band_min_max(GDALRasterBand* demBand, double& dem_min_value, double& dem_max_value, bool approximate = false);
+	void print_bands_info(GDALDataset* ds);
+	
 	// Generate line pixel coordinates
-	void line(int startx, int starty, int endx, int endy, Point* out, int& cnt);
+	void line(int startx, int starty, int endx, int endy, Point* out, int& cnt, int guard);
 
 	std::string str_conv(const Mat3d& mtrx);
 
