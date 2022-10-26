@@ -46,6 +46,5 @@ namespace orthorectify {
 
 	std::string str_conv(const Mat3d& mtrx);
 
-
-
+	std::string get_formatted_date_time();
 }

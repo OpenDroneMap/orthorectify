@@ -377,28 +377,27 @@ namespace orthorectify {
 
 			imgdst.write(out_path, "", [&params, offset_x, offset_y, out_w, out_h](GDALDataset* ds) {
 
+				// Set projection (if any)
+				if (!params.wkt.empty())
+					ds->SetProjection(params.wkt.c_str());
+
 				double transform[6] = {
-					params.dem_transform[0],
-					params.dem_transform[1],
 					offset_x,
-					params.dem_transform[3],
+					params.dem_transform[1],
+					params.dem_transform[2],
+					offset_y,
 					params.dem_transform[4],
-					offset_y
+					params.dem_transform[5]
 				};
 
 				ds->SetGeoTransform(transform);
 
 				// Set width and height, is this necessary?
-				ds->SetMetadataItem("WIDTH", std::to_string(out_w).c_str());
-				ds->SetMetadataItem("HEIGHT", std::to_string(out_h).c_str());
+				ds->SetMetadataItem("AREA_OR_POINT", "Area");
+				ds->SetMetadataItem("TIFFTAG_SOFTWARE", "OpenDroneMap Orthorectify");
+				ds->SetMetadataItem("TIFFTAG_DATETIME", get_formatted_date_time().c_str());
 
-				ds->SetMetadataItem("SOFTWARE", "Orthorectify");
-
-				// Set projection (if any)
-				if (!params.wkt.empty())
-					ds->SetProjection(params.wkt.c_str());
-
-				});
+			});
 
 			const auto elapsed = std::chrono::high_resolution_clock::now() - start;
 

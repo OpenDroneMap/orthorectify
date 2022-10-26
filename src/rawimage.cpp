@@ -111,16 +111,16 @@ namespace orthorectify {
 				this->R = new uint8_t[size];
 				this->G = new uint8_t[size];
 				this->B = new uint8_t[size];
-				
+
 				_readBand(ds, 1, this->R, GDT_Byte);
 				_readBand(ds, 2, this->G, GDT_Byte);
 				_readBand(ds, 3, this->B, GDT_Byte);
-								
+
 				if (bands == 4)
 				{
 					this->A = new uint8_t[size];
 					_readBand(ds, 4, this->A, GDT_Byte);
-					
+
 					this->_has_alpha = true;
 					this->_bands = 4;
 				}
@@ -165,7 +165,7 @@ namespace orthorectify {
 				const auto b = ds->GetRasterBand(1);
 				double min, max;
 				_get_min_max(b, min, max);
-								
+
 				for (auto i = 0; i < this->_width * this->_height; i++) {
 
 					//if (i == 1180119)
@@ -353,19 +353,28 @@ namespace orthorectify {
 
 		if (configure != nullptr) configure(mem_ds);
 
-		if (mem_ds->GetRasterBand(1)->RasterIO(GF_Write, 0, 0, _width, _height, this->R, _width, _height, GDT_Byte, 0, 0) != CE_None) {
+		auto first_band = mem_ds->GetRasterBand(1);
+		first_band->SetColorInterpretation(GCI_RedBand);
+
+		if (first_band->RasterIO(GF_Write, 0, 0, _width, _height, this->R, _width, _height, GDT_Byte, 0, 0) != CE_None) {
 			ERR << "Could not write red raster band";
 			GDALClose(mem_ds);
 			_throw_last_error();
 		}
 
-		if (mem_ds->GetRasterBand(2)->RasterIO(GF_Write, 0, 0, _width, _height, this->G, _width, _height, GDT_Byte, 0, 0) != CE_None) {
+		auto second_band = mem_ds->GetRasterBand(2);
+		second_band->SetColorInterpretation(GCI_GreenBand);
+
+		if (second_band->RasterIO(GF_Write, 0, 0, _width, _height, this->G, _width, _height, GDT_Byte, 0, 0) != CE_None) {
 			ERR << "Could not write green raster band";
 			GDALClose(mem_ds);
 			_throw_last_error();
 		}
 
-		if (mem_ds->GetRasterBand(3)->RasterIO(GF_Write, 0, 0, _width, _height, this->B, _width, _height, GDT_Byte, 0, 0) != CE_None) {
+		auto third_band = mem_ds->GetRasterBand(3);
+		third_band->SetColorInterpretation(GCI_BlueBand);
+
+		if (third_band->RasterIO(GF_Write, 0, 0, _width, _height, this->B, _width, _height, GDT_Byte, 0, 0) != CE_None) {
 			ERR << "Could not write blue raster band";
 			GDALClose(mem_ds);
 			_throw_last_error();
@@ -373,7 +382,11 @@ namespace orthorectify {
 
 		if (_has_alpha)
 		{
-			if (mem_ds->GetRasterBand(4)->RasterIO(GF_Write, 0, 0, _width, _height, this->A, _width, _height, GDT_Byte, 0, 0) != CE_None) {
+
+			auto fourth_band = mem_ds->GetRasterBand(4);
+			fourth_band->SetColorInterpretation(GCI_AlphaBand);
+
+			if (fourth_band->RasterIO(GF_Write, 0, 0, _width, _height, this->A, _width, _height, GDT_Byte, 0, 0) != CE_None) {
 				ERR << "Could not write alpha raster band";
 				GDALClose(mem_ds);
 				_throw_last_error();
