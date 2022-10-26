@@ -83,6 +83,10 @@ else()
     target_link_libraries(${PROJECT_NAME} ${GDAL_LIBRARY})
 endif()
 
+if (NOT WIN32 AND NOT APPLE)
+    target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
                            "${PROJECT_BINARY_DIR}"
                            )
