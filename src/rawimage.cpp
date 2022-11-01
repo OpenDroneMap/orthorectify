@@ -308,18 +308,18 @@ namespace orthorectify {
 		const auto wc = (x - x0) * (y1 - y);
 		const auto wd = (x - x0) * (y - y0);
 
-		out[0] = static_cast<uint8_t>(std::ceil(
+		out[0] = static_cast<uint8_t>(std::round(
 			wa * R[y0 * width + x0] + wb * R[y1 * width + x0] + wc * R[y0 * width + x1] + wd * R[y1 * width + x1]));
 
-		out[1] = static_cast<uint8_t>(std::ceil(
+		out[1] = static_cast<uint8_t>(std::round(
 			wa * G[y0 * width + x0] + wb * G[y1 * width + x0] + wc * G[y0 * width + x1] + wd * G[y1 * width + x1]));
 
-		out[2] = static_cast<uint8_t>(std::ceil(
+		out[2] = static_cast<uint8_t>(std::round(
 			wa * B[y0 * width + x0] + wb * B[y1 * width + x0] + wc * B[y0 * width + x1] + wd * B[y1 * width + x1]));
 
 		if (_has_alpha)
 		{
-			out[3] = static_cast<uint8_t>(std::ceil(
+			out[3] = static_cast<uint8_t>(std::round(
 				wa * A[y0 * width + x0] + wb * A[y1 * width + x0] + wc * A[y0 * width + x1] + wd * A[y1 * width + x1]));
 		}
 
