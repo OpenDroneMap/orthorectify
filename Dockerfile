@@ -1,4 +1,4 @@
-FROM debian:stable AS builder
+FROM debian:bullseye AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -16,7 +16,7 @@ RUN cd orthorectify && \
     cmake -DCMAKE_BUILD_TYPE=Release .. && \
     make -j$(nproc)
 
-FROM debian:stable AS runner
+FROM debian:bullseye AS runner
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 libgdal28 && apt-get clean
