@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "../vendor/json.hpp"
+#include <nlohmann/json.hpp>
 #include "utils.hpp"
 
 #include "types.hpp"

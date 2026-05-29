@@ -3,11 +3,11 @@
 #include <iostream>
 #include <filesystem>
 
-#include "../vendor/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include "utils.hpp"
 
-#include "gdal_priv.h"
+#include <gdal_priv.h>
 
 #define IDX(x, y) ((x) + (y) * _width)
 

@@ -1,7 +1,10 @@
 #!/bin/bash
+set -e
 
-mkdir -p build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
+if [ ! -f vcpkg/vcpkg ]; then
+    ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+fi
+
+cmake --preset linux-release
+cmake --build --preset linux-release
 

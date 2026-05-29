@@ -2,23 +2,57 @@ name: CMake
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
-
-env:
-  BUILD_TYPE: Release
+    branches: ["main"]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            preset: linux-release
+          - os: windows-latest
+            preset: windows-release
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup env
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ca-certificates build-essential libomp-dev libgdal-dev cmake
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build \
+            curl zip unzip tar pkg-config
+
+      - name: Bootstrap vcpkg (Linux)
+        if: runner.os == 'Linux'
+        run: ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Bootstrap vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/build/${{ matrix.preset }}/vcpkg_installed
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg/versions/baseline.json') }}
+          restore-keys: vcpkg-${{ runner.os }}-
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
 
 

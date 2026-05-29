@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "../vendor/cxxopts.hpp"
+#include <cxxopts.hpp>
 
 #include "utils.hpp"
 

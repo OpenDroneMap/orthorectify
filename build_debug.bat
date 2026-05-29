@@ -1,6 +1,8 @@
 @echo off
-if not exist build mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-cmake --build . --config Debug --target ALL_BUILD -- /maxcpucount
-cd ..
+if not exist vcpkg\vcpkg.exe (
+    cd vcpkg
+    call bootstrap-vcpkg.bat -disableMetrics
+    cd ..
+)
+cmake --preset windows-debug
+cmake --build --preset windows-debug

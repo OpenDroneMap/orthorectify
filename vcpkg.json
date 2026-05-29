@@ -1,0 +1,11 @@
+{
+  "name": "orthorectify",
+  "version": "1.0.0",
+  "dependencies": [
+    "gdal",
+    "eigen3",
+    "nlohmann-json",
+    "cxxopts",
+    "plog"
+  ]
+}

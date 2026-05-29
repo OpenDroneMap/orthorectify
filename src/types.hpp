@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../vendor/eigen3/Geometry"
+#include <Eigen/Geometry>
 /*
 template <class T>
 using MatX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;

@@ -9,7 +9,7 @@
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Appenders/ConsoleAppender.h>
 
-#include "gdal_priv.h"
+#include <gdal_priv.h>
 #include "types.hpp"
 
 #define INF PLOGI

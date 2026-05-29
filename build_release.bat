@@ -1,6 +1,8 @@
 @echo off
-if not exist build mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build . --config Release --target ALL_BUILD -- /maxcpucount
-cd ..
+if not exist vcpkg\vcpkg.exe (
+    cd vcpkg
+    call bootstrap-vcpkg.bat -disableMetrics
+    cd ..
+)
+cmake --preset windows-release
+cmake --build --preset windows-release
